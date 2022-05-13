@@ -32,18 +32,22 @@ namespace WebApplicationKafkaProducer.Controllers
             {
                 using (var producer = new ProducerBuilder<Null, string>(config).Build())
                 {
+                    var date = DateTime.UtcNow;
                     for (int i = 0; i < 2_000; i++)
                     {
-                        var result = await producer.ProduceAsync(
-                            topic,
-                            new Message<Null, string>
-                            {
-                                Value = message
-                            });
-                        Console.WriteLine($"#{i} Delivery Timestamp:{ result.Timestamp.UtcDateTime}");
+                        var result = producer.ProduceAsync(
+                        topic,
+                        new Message<Null, string>
+                        {
+                            Value = message
+                        });
+                        Console.WriteLine($"#{i} Delivery Timestamp:");
                     }
 
-                return await Task.FromResult(true);
+                    var resultDate = (DateTime.UtcNow - date).Duration();
+                    Console.WriteLine(resultDate);
+
+                    return await Task.FromResult(true);
                 }
             }
             catch (Exception ex)
