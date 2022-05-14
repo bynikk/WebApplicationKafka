@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddSingleton<IHostedService, ApacheKafkaConsumerService>();
-builder.Services.AddScoped<IRepository<OrderProcessingRequest>, OrdersRepository>();
+builder.Services.AddScoped<IRepository<OrderRequest>, OrdersRepository>();
 builder.Services.AddScoped<kafkadbContext>();
 
 builder.Services.AddControllers();
@@ -25,7 +25,7 @@ builder.Services.AddCors(c =>
 });
 
 builder.Services.AddDbContext<kafkadbContext>(options =>
-            options.UseNpgsql("Host=localhost;Port=5433;Database=kafkadb;Username=postgres;Password=password"));
+            options.UseNpgsql("Host=localhost;Port=5432;Database=kafkadb;Username=postgres;Password=123"));
 
 var app = builder.Build();
 

@@ -4,17 +4,17 @@ using WebApplicationKafkaConsumer.Interfaces;
 
 namespace WebApplicationKafkaConsumer.Repositories
 {
-    public class OrdersRepository : IRepository<OrderProcessingRequest>
+    public class OrdersRepository : IRepository<OrderRequest>
     {
         kafkadbContext _context;
         public OrdersRepository(kafkadbContext context)
         {
             _context = context;
+            _context.ChangeTracker.AutoDetectChangesEnabled = false;
         }
-        public Task Add(OrderProcessingRequest item)
+        public Task Add(OrderRequest item)
         {
-            _context.Orderrequests.Add(item);
-            return _context.SaveChangesAsync();
+            return _context.Orderrequests.AddAsync(item).AsTask();
         }
 
         public Task Delete(int id)
@@ -22,12 +22,17 @@ namespace WebApplicationKafkaConsumer.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<OrderProcessingRequest> Get()
+        public Task<OrderRequest> Get()
         {
             throw new NotImplementedException();
         }
 
-        public Task Update(OrderProcessingRequest item)
+        public Task SaveChanges()
+        {
+            return _context.SaveChangesAsync();
+        }
+
+        public Task Update(OrderRequest item)
         {
             throw new NotImplementedException();
         }

@@ -17,7 +17,7 @@ namespace WebApplicationKafkaConsumer.Database
         {
         }
 
-        public virtual DbSet<OrderProcessingRequest> Orderrequests { get; set; } = null!;
+        public virtual DbSet<OrderRequest> Orderrequests { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -29,8 +29,8 @@ namespace WebApplicationKafkaConsumer.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<OrderProcessingRequest>().HasKey(j => j.OrderId);
-            modelBuilder.Entity<OrderProcessingRequest>(entity =>
+            modelBuilder.Entity<OrderRequest>().HasKey(j => j.OrderId);
+            modelBuilder.Entity<OrderRequest>(entity =>
             {
                 entity.ToTable("orderrequest");
 

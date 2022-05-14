@@ -8,12 +8,12 @@ namespace WebApplicationKafkaConsumer.Services
 {
     public class ApacheKafkaConsumerService : IHostedService
     {
-        IRepository<OrderProcessingRequest> _repository;
+        IRepository<OrderRequest> _repository;
         IServiceProvider _serviceProvider;
         private readonly string topic = "test";
         private readonly string groupId = "test_group";
         private readonly string bootstrapServers = "localhost:9092";
-        int i = 0;
+        Stopwatch _stopwatch = new();
 
         public ApacheKafkaConsumerService(IServiceProvider serviceProvider)
         {
@@ -40,15 +40,18 @@ namespace WebApplicationKafkaConsumer.Services
                     {
                         while (true)
                         {
-                            var consumer = consumerBuilder.Consume(cancelToken.Token);
-                            var orderRequest = JsonSerializer.Deserialize<List<OrderProcessingRequest>>(consumer.Message.Value);
-                            i++;
-                            Console.WriteLine($"#{i} Processing Orders count:{ orderRequest.Count}");
+                             var consumer = consumerBuilder.Consume(cancelToken.Token);
+                            _stopwatch.Start();
+                            var orderRequest = JsonSerializer.Deserialize<List<OrderRequest>>(consumer.Message.Value);
+
+                            Console.WriteLine("before adding : " + _stopwatch.ElapsedMilliseconds);
+
                             AddOrdersToDb(orderRequest);
                         }
                     }
-                    catch (OperationCanceledException)
+                    catch (Exception ex)
                     {
+                        Console.WriteLine(ex.Message);
                         consumerBuilder.Close();
                     }
                 }
@@ -65,21 +68,28 @@ namespace WebApplicationKafkaConsumer.Services
             return Task.CompletedTask;
         }
 
-        private async void AddOrdersToDb(List<OrderProcessingRequest> orders)
+        private async void AddOrdersToDb(List<OrderRequest> orders)
         {
             using (var scope = _serviceProvider.CreateScope())
             {
-                _repository = scope.ServiceProvider.GetRequiredService<IRepository<OrderProcessingRequest>>();
+                _repository = scope.ServiceProvider.GetRequiredService<IRepository<OrderRequest>>();
 
-                var date = DateTime.UtcNow;
-                Console.WriteLine("Start add");
-                foreach (var item in orders)
+                List<Task> tasks = new ();
+
+                Parallel.ForEach(orders, (item, i) =>
                 {
-                    Console.WriteLine("adding " + item.OrderId);
-                    await _repository.Add(item);
-                }
-                var resultDate = (DateTime.UtcNow - date).Duration();
-                Console.WriteLine(resultDate);
+                    lock (_repository)
+                    {
+                        tasks.Add(_repository.Add(item));
+                    }
+                });
+                Task.WaitAll(tasks.ToArray());
+
+                await _repository.SaveChanges();
+
+                _stopwatch.Stop();
+                Console.WriteLine("full time : " + _stopwatch.ElapsedMilliseconds);
+                _stopwatch.Reset();
             }
         }
     }

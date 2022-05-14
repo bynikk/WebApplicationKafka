@@ -19,7 +19,7 @@ namespace WebApplicationKafkaProducer.Controllers
         {
             orders = FillOrders();
             string message = JsonSerializer.Serialize(orders);
-
+            Console.WriteLine(message);
             return Ok(await SendOrderRequest(topic, message));
         }
         private async Task<bool> SendOrderRequest(string topic, string message)
@@ -34,7 +34,6 @@ namespace WebApplicationKafkaProducer.Controllers
             {
                 using (var producer = new ProducerBuilder<Null, string>(config).Build())
                 {
-                    orders = FillOrders();
                     var date = DateTime.UtcNow;
 
                     var result = producer.ProduceAsync(
@@ -43,7 +42,6 @@ namespace WebApplicationKafkaProducer.Controllers
                     {
                         Value = message
                     });
-                    producer.Flush();
                     var resultDate = (DateTime.UtcNow - date).Duration();
                     Console.WriteLine(resultDate);
 
