@@ -3,10 +3,11 @@ using System.Diagnostics;
 using System.Text.Json;
 using WebApplicationKafkaConsumer.Entities;
 using WebApplicationKafkaConsumer.Interfaces;
+using WebApplicationKafkaConsumer.Interfaces.Repositories;
 
 namespace WebApplicationKafkaConsumer.Services
 {
-    public class ApacheKafkaConsumerService : IHostedService
+    public class ApacheKafkaConsumerService : BackgroundService
     {
         IRepository<OrderRequest> _repository;
         IServiceProvider _serviceProvider;
@@ -20,7 +21,7 @@ namespace WebApplicationKafkaConsumer.Services
             _serviceProvider = serviceProvider;
         }
          
-        public Task StartAsync(CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(CancellationToken cancellationToken)
         {
             var config = new ConsumerConfig
             {
@@ -44,7 +45,7 @@ namespace WebApplicationKafkaConsumer.Services
                             _stopwatch.Start();
                             var orderRequest = JsonSerializer.Deserialize<List<OrderRequest>>(consumer.Message.Value);
 
-                            Console.WriteLine("before adding : " + _stopwatch.ElapsedMilliseconds);
+                            Console.WriteLine("Before adding : " + _stopwatch.ElapsedMilliseconds);
 
                             AddOrdersToDb(orderRequest);
                         }
@@ -63,10 +64,6 @@ namespace WebApplicationKafkaConsumer.Services
 
             return Task.CompletedTask;
         }
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
 
         private async void AddOrdersToDb(List<OrderRequest> orders)
         {
@@ -76,13 +73,13 @@ namespace WebApplicationKafkaConsumer.Services
 
                 List<Task> tasks = new ();
 
-                Parallel.ForEach(orders, (item, i) =>
+                foreach (var item in orders)
                 {
-                    lock (_repository)
+                    lock(_repository)
                     {
                         tasks.Add(_repository.Add(item));
                     }
-                });
+                }
                 Task.WaitAll(tasks.ToArray());
 
                 await _repository.SaveChanges();

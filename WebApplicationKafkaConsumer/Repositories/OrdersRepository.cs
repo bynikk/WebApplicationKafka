@@ -1,6 +1,7 @@
-﻿using WebApplicationKafkaConsumer.Database;
+﻿using Microsoft.EntityFrameworkCore;
+using WebApplicationKafkaConsumer.Database;
 using WebApplicationKafkaConsumer.Entities;
-using WebApplicationKafkaConsumer.Interfaces;
+using WebApplicationKafkaConsumer.Interfaces.Repositories;
 
 namespace WebApplicationKafkaConsumer.Repositories
 {
@@ -17,14 +18,18 @@ namespace WebApplicationKafkaConsumer.Repositories
             return _context.Orderrequests.AddAsync(item).AsTask();
         }
 
-        public Task Delete(int id)
+        public async Task Delete(int id)
         {
-            throw new NotImplementedException();
+            var existingItem = await _context.Orderrequests.FirstOrDefaultAsync(x => x.OrderId == id);
+
+            if (existingItem == null) throw new ArgumentNullException(nameof(existingItem));
+
+            _context.Orderrequests.Remove(existingItem);
         }
 
-        public Task<OrderRequest> Get()
+        public Task<List<OrderRequest>> Get()
         {
-            throw new NotImplementedException();
+            return _context.Orderrequests.ToListAsync();
         }
 
         public Task SaveChanges()
@@ -34,7 +39,8 @@ namespace WebApplicationKafkaConsumer.Repositories
 
         public Task Update(OrderRequest item)
         {
-            throw new NotImplementedException();
+            _context.Entry(item).State = EntityState.Modified;
+            return _context.SaveChangesAsync();
         }
     }
 }
