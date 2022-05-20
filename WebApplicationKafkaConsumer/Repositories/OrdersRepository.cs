@@ -18,7 +18,7 @@ namespace WebApplicationKafkaConsumer.Repositories
             return _context.Orderrequests.AddAsync(item).AsTask();
         }
 
-        public async Task Delete(int id)
+        public virtual async Task Delete(int id)
         {
             var existingItem = await _context.Orderrequests.FirstOrDefaultAsync(x => x.OrderId == id);
 
@@ -37,7 +37,7 @@ namespace WebApplicationKafkaConsumer.Repositories
             return _context.SaveChangesAsync();
         }
 
-        public Task Update(OrderRequest item)
+        public virtual Task Update(OrderRequest item)
         {
             _context.Entry(item).State = EntityState.Modified;
             return _context.SaveChangesAsync();

@@ -3,16 +3,16 @@ using WebApplicationKafkaConsumer.Interfaces.CacheDistribution;
 
 namespace WebApplicationKafkaConsumer.CacheDistribution
 {
-    public class OrdersChannelContext : IChannelContext<string>
+    public class OrdersChannelContext : IChannelContext<OrderStreamModel>
     {
-        Channel<string> channel;
+        Channel<OrderStreamModel> channel;
 
         public OrdersChannelContext()
         {
-            channel = Channel.CreateUnbounded<string>();        
+            channel = Channel.CreateUnbounded<OrderStreamModel>();        
         }
 
-        public Channel<string> GetChannel()
+        public Channel<OrderStreamModel> GetChannel()
         {
             return channel;
         }

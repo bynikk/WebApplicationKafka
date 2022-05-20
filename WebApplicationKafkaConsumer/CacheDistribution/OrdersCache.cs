@@ -5,18 +5,26 @@ namespace WebApplicationKafkaConsumer.CacheDistribution
 {
     public class OrdersCache : ICache<OrderRequest>
     {
-        private Dictionary<int, OrderRequest> _orders = new Dictionary<int, OrderRequest>();
+        private Dictionary<int, WeakReference> Orders = new();
 
-        public OrderRequest Get(int key)
+        public OrderRequest? Get(int key)
         {
-            var existingOrder = _orders.FirstOrDefault(o => o.Key == key); ;
+            if (Orders.Keys.Contains(key) && Orders[key].IsAlive)
+            {
+                return Orders[key].Target as OrderRequest;
+            }
 
-            return existingOrder.Value;
+            return null;
         }
 
         public void Set(OrderRequest item)
         {
-            _orders.Add(item.OrderId, item);
+            Orders.Add(item.OrderId, new WeakReference(item));
+        }
+
+        public void Delete(int key)
+        {
+            Orders.Remove(key);
         }
     }
 }
